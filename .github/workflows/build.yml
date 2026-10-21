@@ -17,9 +17,11 @@ jobs:
       
     - name: Fix Java, Colors and C++ Thread
       run: |
-        # 1. Escreve o arquivo Java completo na mão (resolve o erro 404 e as funções faltando)
+        # 1. Cria a pasta BASE correta e escreve o arquivo na mão
+        mkdir -p Android-Mod-Menu/app/src/main/java/com/android/support/base
+        
         printf '%s\n' \
-        "package com.android.support;" \
+        "package com.android.support.base;" \
         "" \
         "import android.content.Context;" \
         "import android.graphics.PixelFormat;" \
@@ -76,9 +78,9 @@ jobs:
         "    public void SetWindowManagerWindowService() {}" \
         "    public void SetWindowManagerActivity() {}" \
         "    public View.OnTouchListener OnTouchListener() { return null; }" \
-        "}" > Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
+        "}" > Android-Mod-Menu/app/src/main/java/com/android/support/base/FloatingWindowManager.java
         
-        # 2. Arruma as cores do DeepSeek de forma segura
+        # 2. Arruma as cores do DeepSeek
         printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#1E1E2E</color>\n    <color name="colorPrimaryDark">#1E1E2E</color>\n    <color name="colorAccent">#4D6BFE</color>\n    <color name="backgroundColor">#1E1E2E</color>\n    <color name="textColor">#FFFFFF</color>\n    <color name="textColorPrimary">#FFFFFF</color>\n    <color name="textColorSecondary">#B0B0B0</color>\n    <color name="iconColor">#4D6BFE</color>\n</resources>' > Android-Mod-Menu/app/src/main/res/values/colors.xml
         
         # 3. Conserta a biblioteca de Threads no C++
