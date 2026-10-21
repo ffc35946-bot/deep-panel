@@ -15,7 +15,7 @@ jobs:
     - name: Unzip Project
       run: unzip modmenu.zip
       
-    - name: Fix Colors and Java Package
+    - name: Fix Java, Colors and C++ Thread
       run: |
         # 1. Arruma as cores do DeepSeek
         cat << 'EOF' > Android-Mod-Menu/app/src/main/res/values/colors.xml
@@ -32,23 +32,12 @@ jobs:
         </resources>
         EOF
         
-        # 2. Conserta a pasta do Java
-        # Move o arquivo para a pasta correta (sem o /base)
-        mkdir -p Android-Mod-Menu/app/src/main/java/com/android/support/
-        find Android-Mod-Menu -path "*base/FloatingWindowManager.java" -exec mv {} Android-Mod-Menu/app/src/main/java/com/android/support/ \;
-        
-        # Atualiza todas as importações para o pacote novo
+        # 2. Conserta os caminhos do Java
         find Android-Mod-Menu/app/src/main/java -name "*.java" -exec sed -i 's/com.android.support.base.FloatingWindowManager/com.android.support.FloatingWindowManager/g' {} +
         
-        # Garante que a declaração do pacote dentro do arquivo está correta
-        sed -i 's/package com.android.support.base;/package com.android.support;/g' Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
-        
-    - name: Setup Android Environment and NDK
-      run: |
-        export ANDROID_HOME=$ANDROID_SDK_ROOT
-        echo "sdk.dir=$ANDROID_SDK_ROOT" > Android-Mod-Menu/local.properties
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" "cmake;3.22.1" > /dev/null
+        # 3. Conserta o erro do pthread no C++
+        CPP_FILE=$(find Android-Mod-Menu -name "Main.cpp" | head -n 1)
+        sed -i '1i #include <pthread.h>' "$CPP_FILE"
         
     - name: Build with Gradle
       run: |
