@@ -15,8 +15,9 @@ jobs:
     - name: Unzip Project
       run: unzip modmenu.zip
       
-    - name: Fix Colors
+    - name: Fix Colors and Package
       run: |
+        # 1. Arruma as cores do DeepSeek
         cat << 'EOF' > Android-Mod-Menu/app/src/main/res/values/colors.xml
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
@@ -30,7 +31,11 @@ jobs:
             <color name="iconColor">#4D6BFE</color>
         </resources>
         EOF
-
+        
+        # 2. Arruma o nome do pacote do FloatingWindowManager
+        FILE=$(find Android-Mod-Menu -name "FloatingWindowManager.java" | head -n 1)
+        sed -i 's/package com.android.support;/package com.android.support.base;/g' "$FILE"
+        
     - name: Setup Android Environment and NDK
       run: |
         export ANDROID_HOME=$ANDROID_SDK_ROOT
