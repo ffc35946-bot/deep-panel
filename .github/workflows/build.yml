@@ -15,70 +15,44 @@ jobs:
     - name: Unzip Project
       run: unzip modmenu.zip
       
-    - name: Fix All Errors Definitely
+    - name: Fix Java, Colors and C++ Thread
       run: |
-        # 1. Baixa o arquivo Java original
+        # 1. Baixa o arquivo Java original intacto (corrige o erro DZShared e métodos faltando)
         curl -sL https://raw.githubusercontent.com/NepMods/Android-Mod-Menu/main/app/src/main/java/com/android/support/FloatingWindowManager.java -o Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
         
-        # 2. Escreve o script Python num arquivo separado
-        cat << 'PY_EOF' > fix.py
-import sys
-file_path = 'Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java'
-with open(file_path, 'r') as f:
-    content = f.read()
-
-gesture_code = '''
-        rootView.setOnTouchListener(new View.OnTouchListener() {
-            float startY = 0;
-            boolean isHidden = false;
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getPointerCount() == 3) {
-                    switch (event.getActionMasked()) {
-                        case MotionEvent.ACTION_DOWN: startY = event.getY(); break;
-                        case MotionEvent.ACTION_UP:
-                            float deltaY = event.getY() - startY;
-                            if (deltaY > 200 && !isHidden) {
-                                rootView.setVisibility(View.GONE); isHidden = true;
-                            } else if (deltaY < -200 && isHidden) {
-                                rootView.setVisibility(View.VISIBLE); isHidden = false;
-                            }
-                            break;
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
-        windowManager.addView(rootView, params);
-'''
-content = content.replace('windowManager.addView(rootView, params);', gesture_code)
-with open(file_path, 'w') as f:
-    f.write(content)
-PY_EOF
-
-        # 3. Executa o Python
-        python3 fix.py
-        
-        # 4. Garante os imports do MotionEvent
+        # 2. Adiciona o import do MotionEvent para o gesto funcionar
         sed -i 's/import android.view.View;/import android.view.View;\nimport android.view.MotionEvent;/g' Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
         
-        # 5. Arruma as cores do DeepSeek
-        cat << 'EOF' > Android-Mod-Menu/app/src/main/res/values/colors.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <color name="colorPrimary">#1E1E2E</color>
-            <color name="colorPrimaryDark">#1E1E2E</color>
-            <color name="colorAccent">#4D6BFE</color>
-            <color name="backgroundColor">#1E1E2E</color>
-            <color name="textColor">#FFFFFF</color>
-            <color name="textColorPrimary">#FFFFFF</color>
-            <color name="textColorSecondary">#B0B0B0</color>
-            <color name="iconColor">#4D6BFE</color>
-        </resources>
-        EOF
-
-        # 6. Conserta a biblioteca de Threads no C++
+        # 3. Injeta o gesto de 3 dedos antes do addView
+        sed -i '/windowManager.addView(rootView, params);/i \
+                rootView.setOnTouchListener(new View.OnTouchListener() {\
+                    float startY = 0;\
+                    boolean isHidden = false;\
+                    @Override\
+                    public boolean onTouch(View v, MotionEvent event) {\
+                        if (event.getPointerCount() == 3) {\
+                            switch (event.getActionMasked()) {\
+                                case MotionEvent.ACTION_DOWN: startY = event.getY(); break;\
+                                case MotionEvent.ACTION_UP:\
+                                    float deltaY = event.getY() - startY;\
+                                    if (deltaY > 200 && !isHidden) {\
+                                        rootView.setVisibility(View.GONE); isHidden = true;\
+                                    } else if (deltaY < -200 && isHidden) {\
+                                        rootView.setVisibility(View.VISIBLE); isHidden = false;\
+                                    }\
+                                    break;\
+                            }\
+                            return true;\
+                        }\
+                        return false;\
+                    }\
+                });\
+        ' Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
+        
+        # 4. Arruma as cores do DeepSeek de forma segura (printf não quebra o YAML)
+        printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="colorPrimary">#1E1E2E</color>\n    <color name="colorPrimaryDark">#1E1E2E</color>\n    <color name="colorAccent">#4D6BFE</color>\n    <color name="backgroundColor">#1E1E2E</color>\n    <color name="textColor">#FFFFFF</color>\n    <color name="textColorPrimary">#FFFFFF</color>\n    <color name="textColorSecondary">#B0B0B0</color>\n    <color name="iconColor">#4D6BFE</color>\n</resources>' > Android-Mod-Menu/app/src/main/res/values/colors.xml
+        
+        # 5. Conserta a biblioteca de Threads no C++
         CPP_FILE=$(find Android-Mod-Menu -name "Main.cpp" | head -n 1)
         sed -i '1i #include <pthread.h>' "$CPP_FILE"
         
