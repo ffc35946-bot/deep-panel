@@ -5,21 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
+        
     - name: Unzip Project
       run: unzip modmenu.zip
-    - name: Fix Gradle permissions
-      run: chmod +x Android-Mod-Menu/gradlew
+      
     - name: Build with Gradle
       run: |
         cd Android-Mod-Menu
+        chmod +x gradlew
         ./gradlew assembleDebug
+        
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
