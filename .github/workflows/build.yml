@@ -12,13 +12,16 @@ jobs:
         distribution: 'temurin'
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
-    - name: Install NDK
-      run: |
-        echo "y" | sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
     - name: Unzip Project
       run: unzip modmenu.zip
+    - name: Fix Gradle permissions
+      run: chmod +x Android-Mod-Menu/gradlew
     - name: Build with Gradle
       run: |
         cd Android-Mod-Menu
-        chmod +x gradlew
-        ./gradlew assembleRelease --stacktrace
+        ./gradlew assembleDebug
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: native-libs
+        path: Android-Mod-Menu/app/build/intermediates/merged_native_libs/debug/out/lib/
