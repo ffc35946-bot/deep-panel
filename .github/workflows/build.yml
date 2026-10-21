@@ -17,11 +17,11 @@ jobs:
       
     - name: Fix All Errors Definitely
       run: |
-        # 1. Baixa o arquivo Java original e intacto do GitHub oficial
+        # 1. Baixa o arquivo Java original
         curl -sL https://raw.githubusercontent.com/NepMods/Android-Mod-Menu/main/app/src/main/java/com/android/support/FloatingWindowManager.java -o Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
         
-        # 2. Injeta o gesto de 3 dedos sem quebrar o resto do arquivo usando Python
-        python3 -c "
+        # 2. Escreve o script Python num arquivo separado
+        cat << 'PY_EOF' > fix.py
 import sys
 file_path = 'Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java'
 with open(file_path, 'r') as f:
@@ -55,27 +55,30 @@ gesture_code = '''
 content = content.replace('windowManager.addView(rootView, params);', gesture_code)
 with open(file_path, 'w') as f:
     f.write(content)
-"
+PY_EOF
+
+        # 3. Executa o Python
+        python3 fix.py
         
-        # 3. Garante os imports do Java para o MotionEvent funcionar
+        # 4. Garante os imports do MotionEvent
         sed -i 's/import android.view.View;/import android.view.View;\nimport android.view.MotionEvent;/g' Android-Mod-Menu/app/src/main/java/com/android/support/FloatingWindowManager.java
         
-        # 4. Arruma as cores do DeepSeek
+        # 5. Arruma as cores do DeepSeek
         cat << 'EOF' > Android-Mod-Menu/app/src/main/res/values/colors.xml
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="colorPrimary">#1E1E2E</color>
-    <color name="colorPrimaryDark">#1E1E2E</color>
-    <color name="colorAccent">#4D6BFE</color>
-    <color name="backgroundColor">#1E1E2E</color>
-    <color name="textColor">#FFFFFF</color>
-    <color name="textColorPrimary">#FFFFFF</color>
-    <color name="textColorSecondary">#B0B0B0</color>
-    <color name="iconColor">#4D6BFE</color>
-</resources>
-EOF
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <color name="colorPrimary">#1E1E2E</color>
+            <color name="colorPrimaryDark">#1E1E2E</color>
+            <color name="colorAccent">#4D6BFE</color>
+            <color name="backgroundColor">#1E1E2E</color>
+            <color name="textColor">#FFFFFF</color>
+            <color name="textColorPrimary">#FFFFFF</color>
+            <color name="textColorSecondary">#B0B0B0</color>
+            <color name="iconColor">#4D6BFE</color>
+        </resources>
+        EOF
 
-        # 5. Conserta a biblioteca de Threads no C++
+        # 6. Conserta a biblioteca de Threads no C++
         CPP_FILE=$(find Android-Mod-Menu -name "Main.cpp" | head -n 1)
         sed -i '1i #include <pthread.h>' "$CPP_FILE"
         
